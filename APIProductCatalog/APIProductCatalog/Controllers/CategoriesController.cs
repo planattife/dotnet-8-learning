@@ -18,64 +18,97 @@ public class CategoriesController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("products")]
-    public ActionResult<IEnumerable<Category>> GetCategoriesProducts()
-    {
-        return _context.Categories
-            .Include(p => p.Products)
-            .ToList();
-    }
-
     [HttpGet]
     public ActionResult<IEnumerable<Category>> Get()
     {
-        return _context.Categories.ToList();
+        try
+        {
+            return _context.Categories.AsNoTracking().ToList();
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                "There was a problem while handling your request.");
+        }
     }
 
     [HttpGet("{id:int}", Name = "GetCategory")]
     public ActionResult<Category> Get(int id)
     {
-        var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
-        if (category is null)
-            return NotFound(notFoundMessage);
-        return Ok(category);
+        try
+        {
+            var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
+            if (category is null)
+                return NotFound(notFoundMessage);
+            return Ok(category);
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                "There was a problem while handling your request.");
+        }  
     }
 
     [HttpPost]
     public ActionResult Post(Category category)
     {
-        if (category is null)
-            return BadRequest();
+        try
+        {
+            if (category is null)
+                return BadRequest();
 
-        _context.Categories.Add(category);
-        _context.SaveChanges();
+            _context.Categories.Add(category);
+            _context.SaveChanges();
 
-        return new CreatedAtRouteResult("GetCategory",
-            new { id = category.CategoryId }, category);
+            return new CreatedAtRouteResult("GetCategory",
+                new { id = category.CategoryId }, category);
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+               "There was a problem while handling your request.");
+        }
+        
     }
 
     [HttpPut("{id:int}")]
     public ActionResult Put(int id, Category category)
     {
-        if (id != category.CategoryId)
-            return BadRequest();
+        try
+        {
+            if (id != category.CategoryId)
+                return BadRequest();
 
-        _context.Entry(category).State = EntityState.Modified;
-        _context.SaveChanges();
+            _context.Entry(category).State = EntityState.Modified;
+            _context.SaveChanges();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+               "There was a problem while handling your request.");
+        }       
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
-        if (category is null)
-            return NotFound(notFoundMessage);
+        try
+        {
+            var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
+            if (category is null)
+                return NotFound(notFoundMessage);
 
-        _context.Categories.Remove(category);
-        _context.SaveChanges();
+            _context.Categories.Remove(category);
+            _context.SaveChanges();
 
-        return Ok();
+            return Ok();
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+               "There was a problem while handling your request.");
+        }     
     }
 }
