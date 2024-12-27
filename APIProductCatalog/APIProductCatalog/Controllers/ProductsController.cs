@@ -34,7 +34,7 @@ namespace APIProductCatalog.Controllers
             }          
         }
 
-        [HttpGet("{id:int}", Name = "GetProduct")]
+        [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
         public ActionResult<Product> Get(int id)
         {
             try
@@ -72,7 +72,7 @@ namespace APIProductCatalog.Controllers
             }           
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{id:int:min(1)}")]
         public ActionResult Put(int id, Product product)
         {
             try
@@ -92,7 +92,7 @@ namespace APIProductCatalog.Controllers
             }     
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
             try
