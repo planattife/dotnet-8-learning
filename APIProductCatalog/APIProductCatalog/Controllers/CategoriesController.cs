@@ -19,11 +19,11 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Category>> Get()
+    public async Task<ActionResult<IEnumerable<Category>>> Get()
     {
         try
         {
-            return _context.Categories.AsNoTracking().ToList();
+            return await _context.Categories.AsNoTracking().ToListAsync();
         }
         catch (Exception)
         {
@@ -33,11 +33,11 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public ActionResult<Category> Get(int id)
+    public async Task<ActionResult<Category>> Get(int id)
     {
         try
         {
-            var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
             if (category is null)
                 return NotFound(notFoundMessage);
             return Ok(category);
@@ -92,11 +92,11 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public ActionResult Delete(int id)
+    public async Task<ActionResult> Delete(int id)
     {
         try
         {
-            var category = _context.Categories.FirstOrDefault(c => c.CategoryId == id);
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
             if (category is null)
                 return NotFound(notFoundMessage);
 
