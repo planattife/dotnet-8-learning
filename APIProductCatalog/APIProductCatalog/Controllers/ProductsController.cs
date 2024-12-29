@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace APIProductCatalog.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
+    //[ApiController]
     public class ProductsController : ControllerBase
     {
         const string notFoundMessage = "Product Not Found.";
@@ -54,6 +54,9 @@ namespace APIProductCatalog.Controllers
         [HttpPost]
         public ActionResult Post([FromBody] Product product)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 if (product is null)

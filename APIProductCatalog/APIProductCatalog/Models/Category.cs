@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using APIProductCatalog.Validations;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -17,6 +18,7 @@ public class Category
     
     [Required]
     [StringLength(80)]
+    [StartWithUpperCaseAttribute]
     public string? Name { get; set; }
     
     [Required]
