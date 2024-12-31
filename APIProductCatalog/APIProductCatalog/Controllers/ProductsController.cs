@@ -11,15 +11,18 @@ namespace APIProductCatalog.Controllers
     {
         const string notFoundMessage = "Product Not Found.";
         private readonly AppDbContext _context;
-
-        public ProductsController(AppDbContext context)
+        private readonly ILogger _logger;
+        public ProductsController(AppDbContext context, ILogger<ProductsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> Get()
         {
+            _logger.LogInformation("=========== GET api/products/ ===========");
+
             try
             {
                 var products = await _context.Products.AsNoTracking().ToListAsync();
@@ -37,11 +40,15 @@ namespace APIProductCatalog.Controllers
         [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
         public async Task<ActionResult<Product>> Get(int id)
         {
+            _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
             try
             {
                 var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
                 if (product is null)
+                {
+                    _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
                     return NotFound(notFoundMessage);
+                }
                 return Ok(product);
             }
             catch (Exception)
