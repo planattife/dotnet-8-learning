@@ -1,4 +1,5 @@
 ﻿using APIProductCatalog.Context;
+using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [ServiceFilter(typeof(ApiLoggingFilter))]
     public async Task<ActionResult<IEnumerable<Category>>> Get()
     {
         try
