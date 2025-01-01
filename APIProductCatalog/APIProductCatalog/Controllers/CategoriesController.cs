@@ -23,94 +23,53 @@ public class CategoriesController : ControllerBase
     [ServiceFilter(typeof(ApiLoggingFilter))]
     public async Task<ActionResult<IEnumerable<Category>>> Get()
     {
-        try
-        {
-            return await _context.Categories.AsNoTracking().ToListAsync();
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                "There was a problem while handling your request.");
-        }
+        return await _context.Categories.AsNoTracking().ToListAsync();
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
     public async Task<ActionResult<Category>> Get(int id)
     {
-        try
-        {
-            var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
-            if (category is null)
-                return NotFound(notFoundMessage);
-            return Ok(category);
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                "There was a problem while handling your request.");
-        }  
+        var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+        if (category is null)
+            return NotFound(notFoundMessage);
+        return Ok(category);
     }
 
     [HttpPost]
     public ActionResult Post(Category category)
     {
-        try
-        {
-            if (category is null)
-                return BadRequest();
+        if (category is null)
+            return BadRequest();
 
-            _context.Categories.Add(category);
-            _context.SaveChanges();
+        _context.Categories.Add(category);
+        _context.SaveChanges();
 
-            return new CreatedAtRouteResult("GetCategory",
-                new { id = category.CategoryId }, category);
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-               "There was a problem while handling your request.");
-        }
-        
+        return new CreatedAtRouteResult("GetCategory",
+            new { id = category.CategoryId }, category);
     }
 
     [HttpPut("{id:int:min(1)}")]
     public ActionResult Put(int id, Category category)
     {
-        try
-        {
-            if (id != category.CategoryId)
-                return BadRequest();
+        if (id != category.CategoryId)
+            return BadRequest();
 
-            _context.Entry(category).State = EntityState.Modified;
-            _context.SaveChanges();
+        _context.Entry(category).State = EntityState.Modified;
+        _context.SaveChanges();
 
-            return NoContent();
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-               "There was a problem while handling your request.");
-        }       
+        return NoContent();
     }
 
     [HttpDelete("{id:int:min(1)}")]
     public async Task<ActionResult> Delete(int id)
     {
-        try
-        {
-            var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
-            if (category is null)
-                return NotFound(notFoundMessage);
+        var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+        if (category is null)
+            return NotFound(notFoundMessage);
 
-            _context.Categories.Remove(category);
-            _context.SaveChanges();
+        _context.Categories.Remove(category);
+        _context.SaveChanges();
 
-            return Ok();
-        }
-        catch (Exception)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-               "There was a problem while handling your request.");
-        }     
+        return Ok();
     }
 }

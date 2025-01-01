@@ -23,39 +23,24 @@ namespace APIProductCatalog.Controllers
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
-            try
-            {
-                var products = await _context.Products.AsNoTracking().ToListAsync();
-                if (products is null)
-                    return NotFound();
-                return Ok(products);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "There was a problem while handling your request.");
-            }          
+            var products = await _context.Products.AsNoTracking().ToListAsync();
+            if (products is null)
+                return NotFound();
+            return Ok(products);
         }
 
         [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
         public async Task<ActionResult<Product>> Get(int id)
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
-            try
+            
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            if (product is null)
             {
-                var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
-                if (product is null)
-                {
-                    _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
-                    return NotFound(notFoundMessage);
-                }
-                return Ok(product);
+                _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
+                return NotFound(notFoundMessage);
             }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "There was a problem while handling your request.");
-            }     
+            return Ok(product);
         }
 
         [HttpPost]
@@ -64,64 +49,40 @@ namespace APIProductCatalog.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                if (product is null)
-                    return BadRequest();
+            if (product is null)
+                return BadRequest();
 
-                _context.Products.Add(product);
-                _context.SaveChanges();
+            _context.Products.Add(product);
+            _context.SaveChanges();
 
-                return new CreatedAtRouteResult("GetProduct",
-                    new { id = product.ProductId }, product);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "There was a problem while handling your request.");
-            }           
+            return new CreatedAtRouteResult("GetProduct",
+                new { id = product.ProductId }, product);
         }
 
         [HttpPut("{id:int:min(1)}")]
         public ActionResult Put(int id, Product product)
         {
-            try
-            {
-                if (id != product.ProductId)
-                    return BadRequest();
+            if (id != product.ProductId)
+                return BadRequest();
 
-                _context.Entry(product).State = EntityState.Modified;
-                _context.SaveChanges();
+            _context.Entry(product).State = EntityState.Modified;
+            _context.SaveChanges();
 
-                return NoContent();
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "There was a problem while handling your request.");
-            }     
+            return NoContent();
         }
 
         [HttpDelete("{id:int:min(1)}")]
         public async Task<ActionResult> Delete(int id)
         {
-            try
-            {
-                var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
 
-                if (product is null)
-                    return NotFound(notFoundMessage);
+            if (product is null)
+                return NotFound(notFoundMessage);
 
-                _context.Products.Remove(product);
-                _context.SaveChanges();
+            _context.Products.Remove(product);
+            _context.SaveChanges();
 
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "There was a problem while handling your request.");
-            }    
+            return Ok();
         }
     }
 }
