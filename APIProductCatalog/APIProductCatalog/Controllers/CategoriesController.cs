@@ -1,6 +1,7 @@
 ﻿using APIProductCatalog.Context;
 using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
+using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,26 +13,29 @@ public class CategoriesController : ControllerBase
 {
     const string notFoundMessage = "Category Not Found.";
 
-    private readonly AppDbContext _context;
+    private readonly ICategoryRepository _repository;
 
-    public CategoriesController(AppDbContext context)
+    public CategoriesController(ICategoryRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
-    public async Task<ActionResult<IEnumerable<Category>>> Get()
+    public ActionResult<IEnumerable<Category>> Get()
     {
-        return await _context.Categories.AsNoTracking().ToListAsync();
+        var categories = _repository.GetCategories();
+        return Ok(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public async Task<ActionResult<Category>> Get(int id)
+    public ActionResult<Category> Get(int id)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+        var category = _repository.GetCategory(id);
+
         if (category is null)
             return NotFound(notFoundMessage);
+
         return Ok(category);
     }
 
@@ -39,37 +43,35 @@ public class CategoriesController : ControllerBase
     public ActionResult Post(Category category)
     {
         if (category is null)
-            return BadRequest();
+            return BadRequest("Invalid Data.");
 
-        _context.Categories.Add(category);
-        _context.SaveChanges();
+        var createdCategory = _repository.Create(category);
 
         return new CreatedAtRouteResult("GetCategory",
-            new { id = category.CategoryId }, category);
+            new { id = createdCategory.CategoryId }, createdCategory);
     }
 
     [HttpPut("{id:int:min(1)}")]
     public ActionResult Put(int id, Category category)
     {
         if (id != category.CategoryId)
-            return BadRequest();
+            return BadRequest("Invalid Data.");
 
-        _context.Entry(category).State = EntityState.Modified;
-        _context.SaveChanges();
+        var updatedCategory = _repository.Update(category);
 
-        return NoContent();
+        return Ok(updatedCategory);
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public async Task<ActionResult> Delete(int id)
+    public ActionResult Delete(int id)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryId == id);
+        var category = _repository.GetCategory(id);
+
         if (category is null)
             return NotFound(notFoundMessage);
 
-        _context.Categories.Remove(category);
-        _context.SaveChanges();
+        var deletedCategory = _repository.Delete(id);
 
-        return Ok();
+        return Ok(deletedCategory);
     }
 }

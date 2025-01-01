@@ -2,6 +2,7 @@ using APIProductCatalog.Context;
 using APIProductCatalog.Extensions;
 using APIProductCatalog.Filters;
 using APIProductCatalog.Logging;
+using APIProductCatalog.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -28,6 +29,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ServerVersion.AutoDetect(connString)));
 
 builder.Services.AddScoped<ApiLoggingFilter>();
+
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
 {
