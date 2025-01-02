@@ -1,5 +1,6 @@
 ﻿using APIProductCatalog.Context;
 using APIProductCatalog.Models;
+using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,31 +11,31 @@ namespace APIProductCatalog.Controllers
     public class ProductsController : ControllerBase
     {
         const string notFoundMessage = "Product Not Found.";
-        private readonly AppDbContext _context;
+        private readonly IProductRepository _repository;
         private readonly ILogger _logger;
-        public ProductsController(AppDbContext context, ILogger<ProductsController> logger)
+        public ProductsController(IProductRepository repository, ILogger<ProductsController> logger)
         {
-            _context = context;
+            _repository = repository;
             _logger = logger;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> Get()
+        public ActionResult<IEnumerable<Product>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
-            var products = await _context.Products.AsNoTracking().ToListAsync();
+            var products = _repository.GetProducts().ToList();
             if (products is null)
                 return NotFound();
             return Ok(products);
         }
 
         [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
-        public async Task<ActionResult<Product>> Get(int id)
+        public ActionResult<Product> Get(int id)
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
-            
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+
+            var product = _repository.GetProduct(id);
             if (product is null)
             {
                 _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
@@ -52,11 +53,10 @@ namespace APIProductCatalog.Controllers
             if (product is null)
                 return BadRequest();
 
-            _context.Products.Add(product);
-            _context.SaveChanges();
+            var createdProduct = _repository.Create(product);
 
             return new CreatedAtRouteResult("GetProduct",
-                new { id = product.ProductId }, product);
+                new { id = createdProduct.ProductId }, createdProduct);
         }
 
         [HttpPut("{id:int:min(1)}")]
@@ -65,24 +65,23 @@ namespace APIProductCatalog.Controllers
             if (id != product.ProductId)
                 return BadRequest();
 
-            _context.Entry(product).State = EntityState.Modified;
-            _context.SaveChanges();
+            bool updated = _repository.Update(product);
 
-            return NoContent();
+            if (updated)
+                return Ok(product);
+            else
+                return StatusCode(500, $"There was an error when trying to update product with id = {id}");
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public async Task<ActionResult> Delete(int id)
+        public ActionResult Delete(int id)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+            bool deleted = _repository.Delete(id);
 
-            if (product is null)
-                return NotFound(notFoundMessage);
-
-            _context.Products.Remove(product);
-            _context.SaveChanges();
-
-            return Ok();
+            if (deleted)
+                return Ok("Product deleted.");
+            else
+                return StatusCode(500, $"There was an error when trying to delete product with id = {id}");
         }
     }
 }
