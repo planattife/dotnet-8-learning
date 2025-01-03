@@ -60,7 +60,7 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpPut("{id:int:min(1)}")]
-        public ActionResult Put(int id, Product product)
+        public ActionResult Put(int id, [FromBody] Product product)
         {
             if (id != product.ProductId)
                 return BadRequest();

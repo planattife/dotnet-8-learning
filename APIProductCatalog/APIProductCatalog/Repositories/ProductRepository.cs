@@ -41,7 +41,7 @@ public class ProductRepository : IProductRepository
         if (product is null)
             throw new InvalidOperationException("Invalid Data.");
 
-        if (_context.Products.Any(p => p.ProductId == product.ProductId)
+        if (_context.Products.Any(p => p.ProductId == product.ProductId))
         {
             _context.Products.Update(product);
             _context.SaveChanges();
