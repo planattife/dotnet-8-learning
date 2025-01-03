@@ -1,8 +1,6 @@
-﻿using APIProductCatalog.Context;
-using APIProductCatalog.Models;
+﻿using APIProductCatalog.Models;
 using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace APIProductCatalog.Controllers
 {
@@ -19,12 +17,22 @@ namespace APIProductCatalog.Controllers
             _logger = logger;
         }
 
+        [HttpGet("category/{id}")]
+        public ActionResult<IEnumerable<Product>> GetProductsByCategory(int id)
+        {
+            var products = _repository.GetProductsByCategory(id);
+            if (products is null)
+                return NotFound();
+
+            return Ok(products);
+        }
+
         [HttpGet]
         public ActionResult<IEnumerable<Product>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
-            var products = _repository.GetProducts().ToList();
+            var products = _repository.GetAll();
             if (products is null)
                 return NotFound();
             return Ok(products);
@@ -35,7 +43,7 @@ namespace APIProductCatalog.Controllers
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
 
-            var product = _repository.GetProduct(id);
+            var product = _repository.Get(p => p.ProductId == id);
             if (product is null)
             {
                 _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
@@ -65,23 +73,22 @@ namespace APIProductCatalog.Controllers
             if (id != product.ProductId)
                 return BadRequest();
 
-            bool updated = _repository.Update(product);
+            var updatedProduct = _repository.Update(product);
 
-            if (updated)
-                return Ok(product);
-            else
-                return StatusCode(500, $"There was an error when trying to update product with id = {id}");
+            return Ok(updatedProduct);
         }
 
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            bool deleted = _repository.Delete(id);
+            var product = _repository.Get(p => p.ProductId == id);
 
-            if (deleted)
-                return Ok("Product deleted.");
-            else
-                return StatusCode(500, $"There was an error when trying to delete product with id = {id}");
+            if (product is null)
+                return NotFound("Product not found.");
+            
+            var deletedProduct = _repository.Delete(product);
+
+            return Ok(deletedProduct);
         }
     }
 }

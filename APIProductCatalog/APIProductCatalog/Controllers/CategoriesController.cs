@@ -24,14 +24,14 @@ public class CategoriesController : ControllerBase
     [ServiceFilter(typeof(ApiLoggingFilter))]
     public ActionResult<IEnumerable<Category>> Get()
     {
-        var categories = _repository.GetCategories();
+        var categories = _repository.GetAll();
         return Ok(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
     public ActionResult<Category> Get(int id)
     {
-        var category = _repository.GetCategory(id);
+        var category = _repository.Get(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
@@ -65,12 +65,12 @@ public class CategoriesController : ControllerBase
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id)
     {
-        var category = _repository.GetCategory(id);
+        var category = _repository.Get(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
 
-        var deletedCategory = _repository.Delete(id);
+        var deletedCategory = _repository.Delete(category);
 
         return Ok(deletedCategory);
     }
