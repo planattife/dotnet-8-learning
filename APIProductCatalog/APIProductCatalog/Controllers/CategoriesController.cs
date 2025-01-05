@@ -1,9 +1,7 @@
-﻿using APIProductCatalog.Context;
-using APIProductCatalog.Filters;
+﻿using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
 using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace APIProductCatalog.Controllers;
 
@@ -13,25 +11,25 @@ public class CategoriesController : ControllerBase
 {
     const string notFoundMessage = "Category Not Found.";
 
-    private readonly ICategoryRepository _repository;
+    private readonly IUnitOfWork _uow;
 
-    public CategoriesController(ICategoryRepository repository)
+    public CategoriesController(IUnitOfWork uow)
     {
-        _repository = repository;
+        _uow = uow;
     }
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
     public ActionResult<IEnumerable<Category>> Get()
     {
-        var categories = _repository.GetAll();
+        var categories = _uow.CategoryRepository.GetAll();
         return Ok(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
     public ActionResult<Category> Get(int id)
     {
-        var category = _repository.Get(c => c.CategoryId == id);
+        var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
@@ -45,7 +43,8 @@ public class CategoriesController : ControllerBase
         if (category is null)
             return BadRequest("Invalid Data.");
 
-        var createdCategory = _repository.Create(category);
+        var createdCategory = _uow.CategoryRepository.Create(category);
+        _uow.Commit();
 
         return new CreatedAtRouteResult("GetCategory",
             new { id = createdCategory.CategoryId }, createdCategory);
@@ -57,7 +56,8 @@ public class CategoriesController : ControllerBase
         if (id != category.CategoryId)
             return BadRequest("Invalid Data.");
 
-        var updatedCategory = _repository.Update(category);
+        var updatedCategory = _uow.CategoryRepository.Update(category);
+        _uow.Commit();
 
         return Ok(updatedCategory);
     }
@@ -65,12 +65,13 @@ public class CategoriesController : ControllerBase
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id)
     {
-        var category = _repository.Get(c => c.CategoryId == id);
+        var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
 
-        var deletedCategory = _repository.Delete(category);
+        var deletedCategory = _uow.CategoryRepository.Delete(category);
+        _uow.Commit();
 
         return Ok(deletedCategory);
     }

@@ -9,18 +9,19 @@ namespace APIProductCatalog.Controllers
     public class ProductsController : ControllerBase
     {
         const string notFoundMessage = "Product Not Found.";
-        private readonly IProductRepository _repository;
+        private readonly IUnitOfWork _uow;
         private readonly ILogger _logger;
-        public ProductsController(IProductRepository repository, ILogger<ProductsController> logger)
+
+        public ProductsController(IUnitOfWork uow, ILogger<ProductsController> logger)
         {
-            _repository = repository;
+            _uow = uow;
             _logger = logger;
         }
 
         [HttpGet("category/{id}")]
         public ActionResult<IEnumerable<Product>> GetProductsByCategory(int id)
         {
-            var products = _repository.GetProductsByCategory(id);
+            var products = _uow.ProductRepository.GetProductsByCategory(id);
             if (products is null)
                 return NotFound();
 
@@ -32,7 +33,7 @@ namespace APIProductCatalog.Controllers
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
-            var products = _repository.GetAll();
+            var products = _uow.ProductRepository.GetAll();
             if (products is null)
                 return NotFound();
             return Ok(products);
@@ -43,7 +44,7 @@ namespace APIProductCatalog.Controllers
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
 
-            var product = _repository.Get(p => p.ProductId == id);
+            var product = _uow.ProductRepository.Get(p => p.ProductId == id);
             if (product is null)
             {
                 _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
@@ -61,7 +62,8 @@ namespace APIProductCatalog.Controllers
             if (product is null)
                 return BadRequest();
 
-            var createdProduct = _repository.Create(product);
+            var createdProduct = _uow.ProductRepository.Create(product);
+            _uow.Commit();
 
             return new CreatedAtRouteResult("GetProduct",
                 new { id = createdProduct.ProductId }, createdProduct);
@@ -73,7 +75,8 @@ namespace APIProductCatalog.Controllers
             if (id != product.ProductId)
                 return BadRequest();
 
-            var updatedProduct = _repository.Update(product);
+            var updatedProduct = _uow.ProductRepository.Update(product);
+            _uow.Commit();
 
             return Ok(updatedProduct);
         }
@@ -81,12 +84,13 @@ namespace APIProductCatalog.Controllers
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var product = _repository.Get(p => p.ProductId == id);
+            var product = _uow.ProductRepository.Get(p => p.ProductId == id);
 
             if (product is null)
                 return NotFound("Product not found.");
             
-            var deletedProduct = _repository.Delete(product);
+            var deletedProduct = _uow.ProductRepository.Delete(product);
+            _uow.Commit();
 
             return Ok(deletedProduct);
         }
