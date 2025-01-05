@@ -1,4 +1,6 @@
-﻿using APIProductCatalog.Filters;
+﻿using APIProductCatalog.DTOs;
+using APIProductCatalog.DTOs.Mappings;
+using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
 using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -20,50 +22,63 @@ public class CategoriesController : ControllerBase
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
-    public ActionResult<IEnumerable<Category>> Get()
+    public ActionResult<IEnumerable<CategoryDTO>> Get()
     {
         var categories = _uow.CategoryRepository.GetAll();
-        return Ok(categories);
+
+        var categoriesDto = categories.ToCategoryDTOList();
+
+        return Ok(categoriesDto);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public ActionResult<Category> Get(int id)
+    public ActionResult<CategoryDTO> Get(int id)
     {
         var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
 
-        return Ok(category);
+        var categoryDto = category.ToCategoryDTO();
+
+        return Ok(categoryDto);
     }
 
     [HttpPost]
-    public ActionResult Post(Category category)
+    public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
     {
-        if (category is null)
+        if (categoryDto is null)
             return BadRequest("Invalid Data.");
+
+        var category = categoryDto.ToCategory();
 
         var createdCategory = _uow.CategoryRepository.Create(category);
         _uow.Commit();
 
+        var createdCategoryDto = createdCategory.ToCategoryDTO();
+
         return new CreatedAtRouteResult("GetCategory",
-            new { id = createdCategory.CategoryId }, createdCategory);
+            new { id = createdCategoryDto.CategoryId }, createdCategoryDto);
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult Put(int id, Category category)
+    public ActionResult<CategoryDTO> Put(int id, CategoryDTO categoryDto)
     {
-        if (id != category.CategoryId)
+        if (id != categoryDto.CategoryId)
             return BadRequest("Invalid Data.");
+
+        var category = categoryDto.ToCategory();
 
         var updatedCategory = _uow.CategoryRepository.Update(category);
         _uow.Commit();
 
-        return Ok(updatedCategory);
+        var updatedCategoryDto = updatedCategory.ToCategoryDTO();
+
+        return Ok(updatedCategoryDto);
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public ActionResult Delete(int id)
+    public ActionResult<CategoryDTO> Delete(int id)
     {
         var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
 
@@ -73,6 +88,8 @@ public class CategoriesController : ControllerBase
         var deletedCategory = _uow.CategoryRepository.Delete(category);
         _uow.Commit();
 
-        return Ok(deletedCategory);
+        var deletedCategoryDto = deletedCategory.ToCategoryDTO();
+
+        return Ok(deletedCategoryDto);
     }
 }
