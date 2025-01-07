@@ -1,5 +1,7 @@
-﻿using APIProductCatalog.Models;
+﻿using APIProductCatalog.DTOs;
+using APIProductCatalog.Models;
 using APIProductCatalog.Repositories;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APIProductCatalog.Controllers
@@ -11,36 +13,42 @@ namespace APIProductCatalog.Controllers
         const string notFoundMessage = "Product Not Found.";
         private readonly IUnitOfWork _uow;
         private readonly ILogger _logger;
-
-        public ProductsController(IUnitOfWork uow, ILogger<ProductsController> logger)
+        private readonly IMapper _mapper;
+        public ProductsController(IUnitOfWork uow, ILogger<ProductsController> logger, IMapper mapper)
         {
             _uow = uow;
             _logger = logger;
+            _mapper = mapper;
         }
 
         [HttpGet("category/{id}")]
-        public ActionResult<IEnumerable<Product>> GetProductsByCategory(int id)
+        public ActionResult<IEnumerable<ProductDTO>> GetProductsByCategory(int id)
         {
             var products = _uow.ProductRepository.GetProductsByCategory(id);
             if (products is null)
                 return NotFound();
 
-            return Ok(products);
+            var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
+
+            return Ok(productsDto);
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Product>> Get()
+        public ActionResult<IEnumerable<ProductDTO>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
             var products = _uow.ProductRepository.GetAll();
             if (products is null)
                 return NotFound();
-            return Ok(products);
+
+            var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
+
+            return Ok(productsDto);
         }
 
         [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
-        public ActionResult<Product> Get(int id)
+        public ActionResult<ProductDTO> Get(int id)
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
 
@@ -50,39 +58,49 @@ namespace APIProductCatalog.Controllers
                 _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
                 return NotFound(notFoundMessage);
             }
-            return Ok(product);
+
+            var productDto = _mapper.Map<ProductDTO>(product);
+            return Ok(productDto);
         }
 
         [HttpPost]
-        public ActionResult Post([FromBody] Product product)
+        public ActionResult<ProductDTO> Post([FromBody] ProductDTO productDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (product is null)
+            if (productDto is null)
                 return BadRequest();
+
+            var product = _mapper.Map<Product>(productDto);
 
             var createdProduct = _uow.ProductRepository.Create(product);
             _uow.Commit();
 
+            var createdProductDto = _mapper.Map<ProductDTO>(createdProduct);
+
             return new CreatedAtRouteResult("GetProduct",
-                new { id = createdProduct.ProductId }, createdProduct);
+                new { id = createdProductDto.ProductId }, createdProductDto);
         }
 
         [HttpPut("{id:int:min(1)}")]
-        public ActionResult Put(int id, [FromBody] Product product)
+        public ActionResult<ProductDTO> Put(int id, [FromBody] ProductDTO productDto)
         {
-            if (id != product.ProductId)
+            if (id != productDto.ProductId)
                 return BadRequest();
+
+            var product = _mapper.Map<Product>(productDto);
 
             var updatedProduct = _uow.ProductRepository.Update(product);
             _uow.Commit();
 
-            return Ok(updatedProduct);
+            var updatedProductDto = _mapper.Map<ProductDTO>(updatedProduct);
+
+            return Ok(updatedProductDto);
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult Delete(int id)
+        public ActionResult<ProductDTO> Delete(int id)
         {
             var product = _uow.ProductRepository.Get(p => p.ProductId == id);
 
@@ -92,7 +110,9 @@ namespace APIProductCatalog.Controllers
             var deletedProduct = _uow.ProductRepository.Delete(product);
             _uow.Commit();
 
-            return Ok(deletedProduct);
+            var deletedProductDto = _mapper.Map<ProductDTO>(deletedProduct);
+
+            return Ok(deletedProductDto);
         }
     }
 }
