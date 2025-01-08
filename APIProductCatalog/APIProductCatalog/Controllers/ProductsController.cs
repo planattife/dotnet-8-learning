@@ -2,6 +2,7 @@
 using APIProductCatalog.Models;
 using APIProductCatalog.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APIProductCatalog.Controllers
@@ -81,6 +82,29 @@ namespace APIProductCatalog.Controllers
 
             return new CreatedAtRouteResult("GetProduct",
                 new { id = createdProductDto.ProductId }, createdProductDto);
+        }
+
+        [HttpPatch("{id}/UpdatePartial")]
+        public ActionResult<ProductDTOUpdateResponse> Patch(int id, [FromBody] JsonPatchDocument<ProductDTOUpdateRequest> patchProductDto)
+        {
+            if (patchProductDto is null || id <= 0)
+                return BadRequest();
+
+            var product = _uow.ProductRepository.Get(c => c.ProductId == id);
+
+            var productUpdateDtoRequest = _mapper.Map<ProductDTOUpdateRequest>(product);
+
+            patchProductDto.ApplyTo(productUpdateDtoRequest, ModelState);
+
+            if (!ModelState.IsValid || TryValidateModel(productUpdateDtoRequest))
+                return BadRequest(ModelState);
+
+            _mapper.Map(productUpdateDtoRequest, product);
+
+            _uow.ProductRepository.Update(product);
+            _uow.Commit();
+
+            return Ok(_mapper.Map<ProductDTOUpdateResponse>(product));
         }
 
         [HttpPut("{id:int:min(1)}")]
