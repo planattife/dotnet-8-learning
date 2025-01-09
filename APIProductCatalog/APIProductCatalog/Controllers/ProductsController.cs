@@ -1,9 +1,11 @@
 ﻿using APIProductCatalog.DTOs;
 using APIProductCatalog.Models;
+using APIProductCatalog.Pagination;
 using APIProductCatalog.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace APIProductCatalog.Controllers
 {
@@ -31,6 +33,27 @@ namespace APIProductCatalog.Controllers
 
             var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
 
+            return Ok(productsDto);
+        }
+
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<ProductDTO>> Get([FromQuery] ProductsParameters productsParameters)
+        {
+            var products = _uow.ProductRepository.GetProducts(productsParameters);
+
+            var metadata = new
+            {
+                products.TotalCount,
+                products.PageSize,
+                products.CurrentPage,
+                products.TotalPages,
+                products.HasNext,
+                products.HasPrevious
+            };
+
+            Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+            var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
             return Ok(productsDto);
         }
 
