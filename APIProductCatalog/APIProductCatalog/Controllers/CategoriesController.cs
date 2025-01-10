@@ -38,20 +38,14 @@ public class CategoriesController : ControllerBase
     {
         var categories = _uow.CategoryRepository.GetCategories(categoriesParameters);
 
-        var metadata = new
-        {
-            categories.TotalCount,
-            categories.PageSize,
-            categories.CurrentPage,
-            categories.TotalPages,
-            categories.HasNext,
-            categories.HasPrevious
-        };
+        return GetCategories(categories);
+    }
 
-        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
-
-        var categoriesDto = categories.ToCategoryDTOList();
-        return Ok(categoriesDto);
+    [HttpGet("filter/name/pagination")]
+    public ActionResult<IEnumerable<CategoryDTO>> GetCategoriesByName([FromQuery] CategoriesFilterName categoriesParameters)
+    {
+        var categories = _uow.CategoryRepository.GetCategoriesByName(categoriesParameters);
+        return GetCategories(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
@@ -114,5 +108,23 @@ public class CategoriesController : ControllerBase
         var deletedCategoryDto = deletedCategory.ToCategoryDTO();
 
         return Ok(deletedCategoryDto);
+    }
+
+    private ActionResult<IEnumerable<CategoryDTO>> GetCategories(PagedList<Category> categories)
+    {
+        var metadata = new
+        {
+            categories.TotalCount,
+            categories.PageSize,
+            categories.CurrentPage,
+            categories.TotalPages,
+            categories.HasNext,
+            categories.HasPrevious
+        };
+
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+        var categoriesDto = categories.ToCategoryDTOList();
+        return Ok(categoriesDto);
     }
 }
