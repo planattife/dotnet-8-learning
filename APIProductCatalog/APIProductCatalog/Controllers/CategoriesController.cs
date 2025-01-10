@@ -2,8 +2,10 @@
 using APIProductCatalog.DTOs.Mappings;
 using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
+using APIProductCatalog.Pagination;
 using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace APIProductCatalog.Controllers;
 
@@ -28,6 +30,27 @@ public class CategoriesController : ControllerBase
 
         var categoriesDto = categories.ToCategoryDTOList();
 
+        return Ok(categoriesDto);
+    }
+
+    [HttpGet("pagination")]
+    public ActionResult<IEnumerable<CategoryDTO>> Get([FromQuery] CategoriesParameters categoriesParameters)
+    {
+        var categories = _uow.CategoryRepository.GetCategories(categoriesParameters);
+
+        var metadata = new
+        {
+            categories.TotalCount,
+            categories.PageSize,
+            categories.CurrentPage,
+            categories.TotalPages,
+            categories.HasNext,
+            categories.HasPrevious
+        };
+
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+        var categoriesDto = categories.ToCategoryDTOList();
         return Ok(categoriesDto);
     }
 
