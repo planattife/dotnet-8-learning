@@ -25,4 +25,27 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         return GetAll().Where(c => c.CategoryId == id);
     }
+
+    public PagedList<Product> GetProductsByPrice(ProductsFilterPrice productFilterParams)
+    {
+        var products = GetAll().AsQueryable();
+        if (productFilterParams.Price.HasValue && !string.IsNullOrEmpty(productFilterParams.PriceCriteria))
+        {
+            if (productFilterParams.PriceCriteria.Equals("greater", StringComparison.OrdinalIgnoreCase))
+            {
+                products = products.Where(p => p.Price > productFilterParams.Price.Value).OrderBy(p => p.Price);
+            }
+            if (productFilterParams.PriceCriteria.Equals("lower", StringComparison.OrdinalIgnoreCase))
+            {
+                products = products.Where(p => p.Price < productFilterParams.Price.Value).OrderBy(p => p.Price);
+            }
+            if (productFilterParams.PriceCriteria.Equals("equal", StringComparison.OrdinalIgnoreCase))
+            {
+                products = products.Where(p => p.Price == productFilterParams.Price.Value).OrderBy(p => p.Price);
+            }
+        }
+
+        var paginatedProducts = PagedList<Product>.ToPagedList(products, productFilterParams.PageNumber, productFilterParams.PageSize);
+        return paginatedProducts;
+    }
 }
