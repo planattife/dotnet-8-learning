@@ -24,9 +24,9 @@ public class CategoriesController : ControllerBase
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
-    public ActionResult<IEnumerable<CategoryDTO>> Get()
+    public async Task<ActionResult<IEnumerable<CategoryDTO>>> Get()
     {
-        var categories = _uow.CategoryRepository.GetAll();
+        var categories = await _uow.CategoryRepository.GetAllAsync();
 
         var categoriesDto = categories.ToCategoryDTOList();
 
@@ -34,24 +34,24 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("pagination")]
-    public ActionResult<IEnumerable<CategoryDTO>> Get([FromQuery] CategoriesParameters categoriesParameters)
+    public async Task<ActionResult<IEnumerable<CategoryDTO>>> Get([FromQuery] CategoriesParameters categoriesParameters)
     {
-        var categories = _uow.CategoryRepository.GetCategories(categoriesParameters);
+        var categories = await _uow.CategoryRepository.GetCategoriesAsync(categoriesParameters);
 
         return GetCategories(categories);
     }
 
     [HttpGet("filter/name/pagination")]
-    public ActionResult<IEnumerable<CategoryDTO>> GetCategoriesByName([FromQuery] CategoriesFilterName categoriesParameters)
+    public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategoriesByName([FromQuery] CategoriesFilterName categoriesParameters)
     {
-        var categories = _uow.CategoryRepository.GetCategoriesByName(categoriesParameters);
+        var categories = await _uow.CategoryRepository.GetCategoriesByNameAsync(categoriesParameters);
         return GetCategories(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public ActionResult<CategoryDTO> Get(int id)
+    public async Task<ActionResult<CategoryDTO>> Get(int id)
     {
-        var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
+        var category = await _uow.CategoryRepository.GetAsync(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
@@ -62,7 +62,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
+    public async Task<ActionResult<CategoryDTO>> Post(CategoryDTO categoryDto)
     {
         if (categoryDto is null)
             return BadRequest("Invalid Data.");
@@ -70,7 +70,7 @@ public class CategoriesController : ControllerBase
         var category = categoryDto.ToCategory();
 
         var createdCategory = _uow.CategoryRepository.Create(category);
-        _uow.Commit();
+        await _uow.CommitAsync();
 
         var createdCategoryDto = createdCategory.ToCategoryDTO();
 
@@ -79,7 +79,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult<CategoryDTO> Put(int id, CategoryDTO categoryDto)
+    public async Task<ActionResult<CategoryDTO>> Put(int id, CategoryDTO categoryDto)
     {
         if (id != categoryDto.CategoryId)
             return BadRequest("Invalid Data.");
@@ -87,7 +87,7 @@ public class CategoriesController : ControllerBase
         var category = categoryDto.ToCategory();
 
         var updatedCategory = _uow.CategoryRepository.Update(category);
-        _uow.Commit();
+        await _uow.CommitAsync();
 
         var updatedCategoryDto = updatedCategory.ToCategoryDTO();
 
@@ -95,15 +95,15 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public ActionResult<CategoryDTO> Delete(int id)
+    public async Task<ActionResult<CategoryDTO>> Delete(int id)
     {
-        var category = _uow.CategoryRepository.Get(c => c.CategoryId == id);
+        var category = await _uow.CategoryRepository.GetAsync(c => c.CategoryId == id);
 
         if (category is null)
             return NotFound(notFoundMessage);
 
         var deletedCategory = _uow.CategoryRepository.Delete(category);
-        _uow.Commit();
+        await _uow.CommitAsync();
 
         var deletedCategoryDto = deletedCategory.ToCategoryDTO();
 

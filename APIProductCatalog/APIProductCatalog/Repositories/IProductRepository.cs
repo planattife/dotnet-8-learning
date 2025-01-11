@@ -5,7 +5,7 @@ namespace APIProductCatalog.Repositories;
 
 public interface IProductRepository : IRepository<Product>
 {
-    PagedList<Product> GetProducts(ProductsParameters productParams);
-    IEnumerable<Product> GetProductsByCategory(int id);
-    PagedList<Product> GetProductsByPrice(ProductsFilterPrice productFilterParams);
+    Task<PagedList<Product>> GetProductsAsync(ProductsParameters productParams);
+    Task<IEnumerable<Product>> GetProductsByCategoryAsync(int id);
+    Task<PagedList<Product>> GetProductsByPriceAsync(ProductsFilterPrice productFilterParams);
 }

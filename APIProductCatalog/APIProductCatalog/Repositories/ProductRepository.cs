@@ -11,24 +11,27 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
     }
 
-    public PagedList<Product> GetProducts(ProductsParameters productParams)
+    public async Task<PagedList<Product>> GetProductsAsync(ProductsParameters productParams)
     {
-        var products = GetAll()
+        var products = await GetAllAsync();
+        var sortedProducts = products
             .OrderBy(p => p.ProductId)
             .AsQueryable();
 
-        var paginatedProducts = PagedList<Product>.ToPagedList(products, productParams.PageNumber, productParams.PageSize);
-        return paginatedProducts;
+        var result = PagedList<Product>.ToPagedList(sortedProducts, productParams.PageNumber, productParams.PageSize);
+        return result;
     }
 
-    public IEnumerable<Product> GetProductsByCategory(int id)
+    public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int id)
     {
-        return GetAll().Where(c => c.CategoryId == id);
+        var products = await GetAllAsync();
+        var filteredProducts = products.Where(c => c.CategoryId == id);
+        return filteredProducts;
     }
 
-    public PagedList<Product> GetProductsByPrice(ProductsFilterPrice productFilterParams)
+    public async Task<PagedList<Product>> GetProductsByPriceAsync(ProductsFilterPrice productFilterParams)
     {
-        var products = GetAll().AsQueryable();
+        var products = await GetAllAsync();
         if (productFilterParams.Price.HasValue && !string.IsNullOrEmpty(productFilterParams.PriceCriteria))
         {
             if (productFilterParams.PriceCriteria.Equals("greater", StringComparison.OrdinalIgnoreCase))
@@ -45,7 +48,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
             }
         }
 
-        var paginatedProducts = PagedList<Product>.ToPagedList(products, productFilterParams.PageNumber, productFilterParams.PageSize);
+        var paginatedProducts = PagedList<Product>.ToPagedList(products.AsQueryable(), productFilterParams.PageNumber, productFilterParams.PageSize);
         return paginatedProducts;
     }
 }

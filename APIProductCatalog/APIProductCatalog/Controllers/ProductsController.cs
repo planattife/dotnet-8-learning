@@ -25,9 +25,9 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpGet("category/{id}")]
-        public ActionResult<IEnumerable<ProductDTO>> GetProductsByCategory(int id)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsByCategory(int id)
         {
-            var products = _uow.ProductRepository.GetProductsByCategory(id);
+            var products = await _uow.ProductRepository.GetProductsByCategoryAsync(id);
             if (products is null)
                 return NotFound();
 
@@ -37,26 +37,26 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<ProductDTO>> Get([FromQuery] ProductsParameters productsParameters)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> Get([FromQuery] ProductsParameters productsParameters)
         {
-            var products = _uow.ProductRepository.GetProducts(productsParameters);
+            var products = await _uow.ProductRepository.GetProductsAsync(productsParameters);
 
             return GetProducts(products);
         }
 
         [HttpGet("filter/price/pagination")]
-        public ActionResult<IEnumerable<ProductDTO>> GetProductsByPrice([FromQuery] ProductsFilterPrice productsFilterPrice)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsByPrice([FromQuery] ProductsFilterPrice productsFilterPrice)
         {
-            var products = _uow.ProductRepository.GetProductsByPrice(productsFilterPrice);
+            var products = await _uow.ProductRepository.GetProductsByPriceAsync(productsFilterPrice);
             return GetProducts(products);
         }
     
         [HttpGet]
-        public ActionResult<IEnumerable<ProductDTO>> Get()
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
 
-            var products = _uow.ProductRepository.GetAll();
+            var products = await _uow.ProductRepository.GetAllAsync();
             if (products is null)
                 return NotFound();
 
@@ -66,11 +66,11 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpGet("{id:int:min(1)}", Name = "GetProduct")]
-        public ActionResult<ProductDTO> Get(int id)
+        public async Task<ActionResult<ProductDTO>> Get(int id)
         {
             _logger.LogInformation($"=========== GET api/products/id = {id} ===========");
 
-            var product = _uow.ProductRepository.Get(p => p.ProductId == id);
+            var product = await _uow.ProductRepository.GetAsync(p => p.ProductId == id);
             if (product is null)
             {
                 _logger.LogInformation($"=========== GET api/products/id = {id} NOT FOUND ===========");
@@ -82,7 +82,7 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ProductDTO> Post([FromBody] ProductDTO productDto)
+        public async Task<ActionResult<ProductDTO>> Post([FromBody] ProductDTO productDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -93,7 +93,7 @@ namespace APIProductCatalog.Controllers
             var product = _mapper.Map<Product>(productDto);
 
             var createdProduct = _uow.ProductRepository.Create(product);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             var createdProductDto = _mapper.Map<ProductDTO>(createdProduct);
 
@@ -102,12 +102,12 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpPatch("{id}/UpdatePartial")]
-        public ActionResult<ProductDTOUpdateResponse> Patch(int id, [FromBody] JsonPatchDocument<ProductDTOUpdateRequest> patchProductDto)
+        public async Task<ActionResult<ProductDTOUpdateResponse>> Patch(int id, [FromBody] JsonPatchDocument<ProductDTOUpdateRequest> patchProductDto)
         {
             if (patchProductDto is null || id <= 0)
                 return BadRequest();
 
-            var product = _uow.ProductRepository.Get(c => c.ProductId == id);
+            var product = await _uow.ProductRepository.GetAsync(c => c.ProductId == id);
 
             var productUpdateDtoRequest = _mapper.Map<ProductDTOUpdateRequest>(product);
 
@@ -119,13 +119,13 @@ namespace APIProductCatalog.Controllers
             _mapper.Map(productUpdateDtoRequest, product);
 
             _uow.ProductRepository.Update(product);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             return Ok(_mapper.Map<ProductDTOUpdateResponse>(product));
         }
 
         [HttpPut("{id:int:min(1)}")]
-        public ActionResult<ProductDTO> Put(int id, [FromBody] ProductDTO productDto)
+        public async Task<ActionResult<ProductDTO>> Put(int id, [FromBody] ProductDTO productDto)
         {
             if (id != productDto.ProductId)
                 return BadRequest();
@@ -133,7 +133,7 @@ namespace APIProductCatalog.Controllers
             var product = _mapper.Map<Product>(productDto);
 
             var updatedProduct = _uow.ProductRepository.Update(product);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             var updatedProductDto = _mapper.Map<ProductDTO>(updatedProduct);
 
@@ -141,15 +141,15 @@ namespace APIProductCatalog.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult<ProductDTO> Delete(int id)
+        public async Task<ActionResult<ProductDTO>> Delete(int id)
         {
-            var product = _uow.ProductRepository.Get(p => p.ProductId == id);
+            var product = await _uow.ProductRepository.GetAsync(p => p.ProductId == id);
 
             if (product is null)
                 return NotFound("Product not found.");
             
             var deletedProduct = _uow.ProductRepository.Delete(product);
-            _uow.Commit();
+            await _uow.CommitAsync();
 
             var deletedProductDto = _mapper.Map<ProductDTO>(deletedProduct);
 
