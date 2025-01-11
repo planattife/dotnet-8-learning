@@ -6,6 +6,7 @@ using APIProductCatalog.Pagination;
 using APIProductCatalog.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using X.PagedList;
 
 namespace APIProductCatalog.Controllers;
 
@@ -110,16 +111,16 @@ public class CategoriesController : ControllerBase
         return Ok(deletedCategoryDto);
     }
 
-    private ActionResult<IEnumerable<CategoryDTO>> GetCategories(PagedList<Category> categories)
+    private ActionResult<IEnumerable<CategoryDTO>> GetCategories(IPagedList<Category> categories)
     {
         var metadata = new
         {
-            categories.TotalCount,
+            categories.Count,
             categories.PageSize,
-            categories.CurrentPage,
-            categories.TotalPages,
-            categories.HasNext,
-            categories.HasPrevious
+            categories.PageCount,
+            categories.TotalItemCount,
+            categories.HasNextPage,
+            categories.HasPreviousPage
         };
 
         Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
