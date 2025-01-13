@@ -4,6 +4,7 @@ using APIProductCatalog.Filters;
 using APIProductCatalog.Models;
 using APIProductCatalog.Pagination;
 using APIProductCatalog.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using X.PagedList;
@@ -24,6 +25,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     [ServiceFilter(typeof(ApiLoggingFilter))]
     public async Task<ActionResult<IEnumerable<CategoryDTO>>> Get()
     {
