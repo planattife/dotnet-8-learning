@@ -1,6 +1,6 @@
 ﻿namespace APIProductCatalog.DTOs;
 
-public class TokenModel
+public class TokenMode
 {
     public string? AccessToken { get; set; }
     public string? RefreshToken { get; set; }
