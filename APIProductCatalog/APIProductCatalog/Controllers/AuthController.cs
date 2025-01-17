@@ -45,26 +45,25 @@ namespace APIProductCatalog.Controllers
                 foreach (var userRole in userRoles)
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-
-                    var token = _tokenService.GenerateAccessToken(authClaims, _config);
-                    var refreshToken = _tokenService.GenerateRefreshToken();
-
-                    _ = int.TryParse(_config["JWT:RefreshTokenValidityInMinutes"], out int refreshTokenValidityInMinutes);
-
-                    user.RefreshTokenExpiryTime = DateTime.Now.AddMinutes(refreshTokenValidityInMinutes);
-
-                    user.RefreshToken = refreshToken;
-
-                    await _userManager.UpdateAsync(user);
-
-                    return Ok(new 
-                    {
-                        Token = new JwtSecurityTokenHandler().WriteToken(token),
-                        RefreshToken = refreshToken,
-                        Expiration = token.ValidTo
-                    });
                 }
+                
+                var token = _tokenService.GenerateAccessToken(authClaims, _config);
+                var refreshToken = _tokenService.GenerateRefreshToken();
 
+                _ = int.TryParse(_config["JWT:RefreshTokenValidityInMinutes"], out int refreshTokenValidityInMinutes);
+
+                user.RefreshTokenExpiryTime = DateTime.Now.AddMinutes(refreshTokenValidityInMinutes);
+
+                user.RefreshToken = refreshToken;
+
+                await _userManager.UpdateAsync(user);
+
+                return Ok(new 
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    RefreshToken = refreshToken,
+                    Expiration = token.ValidTo
+                });
             }
 
             return Unauthorized();

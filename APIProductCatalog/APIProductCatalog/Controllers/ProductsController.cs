@@ -3,6 +3,7 @@ using APIProductCatalog.Models;
 using APIProductCatalog.Pagination;
 using APIProductCatalog.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -53,6 +54,7 @@ namespace APIProductCatalog.Controllers
         }
     
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");
