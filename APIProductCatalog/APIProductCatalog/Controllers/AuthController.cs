@@ -3,6 +3,7 @@ using System.Security.Claims;
 using APIProductCatalog.DTOs;
 using APIProductCatalog.Models;
 using APIProductCatalog.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -97,7 +98,7 @@ namespace APIProductCatalog.Controllers
                 {
                     new Claim(ClaimTypes.Name, user.UserName!),
                     new Claim(ClaimTypes.Email, user.Email!),
-                    new Claim("id". user.UserName!),
+                    new Claim("id", user.UserName!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
