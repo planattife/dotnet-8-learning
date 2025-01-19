@@ -54,7 +54,7 @@ namespace APIProductCatalog.Controllers
         }
     
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
             _logger.LogInformation("=========== GET api/products/ ===========");

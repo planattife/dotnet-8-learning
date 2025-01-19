@@ -28,6 +28,7 @@ namespace APIProductCatalog.Controllers
 
         [HttpPost]
         [Route("CreateRole")]
+        [Authorize(Policy = "SuperAdminOnly")]
         public async Task<IActionResult> CreateRole(string roleName)
         {
             var roleExist = await _roleManager.RoleExistsAsync(roleName);
@@ -56,6 +57,7 @@ namespace APIProductCatalog.Controllers
 
         [HttpPost]
         [Route("AddUserToRole")]
+        [Authorize(Policy = "SuperAdminOnly")]
         public async Task<IActionResult> AddUserToRole(string email, string roleName) 
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -95,6 +97,7 @@ namespace APIProductCatalog.Controllers
                 {
                     new Claim(ClaimTypes.Name, user.UserName!),
                     new Claim(ClaimTypes.Email, user.Email!),
+                    new Claim("id". user.UserName!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
@@ -191,6 +194,7 @@ namespace APIProductCatalog.Controllers
 
         [HttpPost]
         [Route("remove/{username}")]
+        [Authorize(Policy = "ExclusiveOnly")]
         public async Task<IActionResult> Remove(string username)
         {
             var user = await _userManager.FindByNameAsync(username);
